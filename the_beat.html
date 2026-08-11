@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>The Beat — Fantasy Wire</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --field:#101812;
+    --field-2:#161f18;
+    --panel:#1b241d;
+    --line:#2b362d;
+    --chalk:#eef2ea;
+    --chalk-dim:#a9b6ac;
+    --turf:#5fae4e;
+    --turf-dim:#3d6e34;
+    --flag:#e8542c;
+    --gold:#e8b23c;
+    --radius:10px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--field);color:var(--chalk);font-family:'Barlow',sans-serif;}
+  body{min-height:100vh;}
+  ::selection{background:var(--turf);color:#0b100c;}
+
+  .app{max-width:960px;margin:0 auto;padding:0 0 60px;}
+
+  header.top{
+    position:sticky; top:0; z-index:20;
+    background:linear-gradient(180deg, var(--field) 70%, transparent);
+    padding:18px 16px 10px;
+    border-bottom:1px solid var(--line);
+  }
+  .brand{display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap;}
+  .brand h1{font-family:'Archivo Black',sans-serif; font-size:26px; letter-spacing:0.5px; margin:0; color:var(--chalk);}
+  .brand h1 span{color:var(--turf);}
+  .brand .tag{font-family:'Barlow Condensed',sans-serif; font-size:13px; letter-spacing:2px; text-transform:uppercase; color:var(--chalk-dim);}
+  .headerbtns{display:flex; gap:8px;}
+  .btn{
+    font-family:'Barlow Condensed',sans-serif; font-weight:600; letter-spacing:0.5px;
+    background:var(--panel); color:var(--chalk); border:1px solid var(--line);
+    padding:8px 14px; border-radius:999px; font-size:14px; cursor:pointer;
+    display:inline-flex; align-items:center; gap:6px; transition:border-color .15s, background .15s;
+  }
+  .btn:hover{border-color:var(--turf);}
+  .btn.primary{background:var(--turf); color:#0b100c; border-color:var(--turf); font-weight:700;}
+  .btn.primary:hover{background:#6fc25c;}
+  .btn:disabled{opacity:.5; cursor:default;}
+
+  .meta-row{display:flex; justify-content:space-between; align-items:center; margin-top:10px; flex-wrap:wrap; gap:8px;}
+  #lastUpdated{font-size:12px; color:var(--chalk-dim); font-family:'Barlow Condensed',sans-serif; letter-spacing:.5px;}
+
+  .filterwrap{padding:12px 16px 4px;}
+  .divgroup{margin-bottom:10px;}
+  .divlabel{
+    font-family:'Barlow Condensed',sans-serif; font-size:11px; letter-spacing:2px;
+    text-transform:uppercase; color:var(--chalk-dim); margin:0 0 6px 2px;
+  }
+  .chiprow{display:flex; flex-wrap:wrap; gap:6px;}
+  .chip{
+    font-family:'Barlow Condensed',sans-serif; font-weight:600; font-size:13px;
+    padding:6px 11px; border-radius:999px; border:1px solid var(--line);
+    background:var(--panel); color:var(--chalk-dim); cursor:pointer; user-select:none;
+    display:flex; align-items:center; gap:6px; transition:all .12s;
+  }
+  .chip .dot{width:8px; height:8px; border-radius:50%; flex-shrink:0;}
+  .chip.active{color:#0b100c; border-color:transparent;}
+  .chip:active{transform:scale(0.96);}
+  .chip.all{border-color:var(--turf-dim);}
+  .chip.group{border-color:var(--gold); color:var(--gold); font-weight:700;}
+  .chip.group.active{background:var(--gold); color:#0b100c;}
+
+  .feed{padding:14px 16px 0;}
+  .empty{text-align:center; padding:60px 20px; color:var(--chalk-dim); font-family:'Barlow Condensed',sans-serif; font-size:16px;}
+  .card{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    padding:14px 16px; margin-bottom:10px;
+  }
+  .card:hover{border-color:var(--turf-dim);}
+  .card-top{display:flex; align-items:center; gap:8px; margin-bottom:6px; flex-wrap:wrap;}
+  .badge{
+    font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:11px; letter-spacing:1px;
+    padding:3px 9px; border-radius:5px; color:#fff; text-transform:uppercase;
+  }
+  .publisher{font-size:12px; color:var(--turf); font-family:'Barlow Condensed',sans-serif; font-weight:600;}
+  .time{font-size:12px; color:var(--chalk-dim); margin-left:auto; font-family:'Barlow Condensed',sans-serif;}
+  .headline{font-size:17px; font-weight:600; line-height:1.3; margin:0 0 4px; color:var(--chalk);}
+  .snippet{font-size:14px; line-height:1.45; color:var(--chalk-dim); margin:0 0 10px;
+    display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden;}
+  .readstory{
+    display:inline-flex; align-items:center; gap:5px;
+    font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:13px; letter-spacing:.5px;
+    color:var(--turf); text-decoration:none; border:1px solid var(--turf-dim); border-radius:999px;
+    padding:6px 13px; transition:background .15s, color .15s;
+  }
+  .readstory:hover{background:var(--turf); color:#0b100c;}
+
+  .loadmsg{text-align:center; padding:24px; color:var(--chalk-dim); font-family:'Barlow Condensed',sans-serif; font-size:15px;}
+  .spin{display:inline-block; width:14px; height:14px; border:2px solid var(--line); border-top-color:var(--turf); border-radius:50%; animation:sp .7s linear infinite; margin-right:8px; vertical-align:-2px;}
+  @keyframes sp{to{transform:rotate(360deg);}}
+
+  .overlay{position:fixed; inset:0; background:rgba(6,9,7,.7); z-index:40; display:none; align-items:flex-end; justify-content:center;}
+  .overlay.open{display:flex;}
+  .sheet{
+    background:var(--field-2); width:100%; max-width:640px; max-height:85vh; overflow-y:auto;
+    border-radius:16px 16px 0 0; border:1px solid var(--line); border-bottom:none;
+    padding:18px 16px 30px;
+  }
+  @media(min-width:700px){
+    .overlay{align-items:center;}
+    .sheet{border-radius:16px; border-bottom:1px solid var(--line); max-height:80vh;}
+  }
+  .sheet h2{font-family:'Archivo Black',sans-serif; font-size:19px; margin:0 0 4px;}
+  .sheet .sub{color:var(--chalk-dim); font-size:13px; margin:0 0 16px; font-family:'Barlow Condensed',sans-serif;}
+  .teamrow{border:1px solid var(--line); border-radius:8px; padding:10px 12px; margin-bottom:8px;}
+  .teamrow-top{display:flex; align-items:center; gap:8px; margin-bottom:8px;}
+  .teamrow-name{font-weight:600; font-size:14px;}
+  .feedurl-row{display:flex; gap:6px; margin-bottom:6px;}
+  .feedurl-row input{
+    flex:1; background:var(--field); border:1px solid var(--line); color:var(--chalk);
+    padding:7px 9px; border-radius:6px; font-size:12px; font-family:monospace;
+  }
+  .feedurl-row input:focus{outline:none; border-color:var(--turf);}
+  .iconbtn{background:var(--panel); border:1px solid var(--line); color:var(--chalk-dim); width:30px; height:30px; border-radius:6px; cursor:pointer; font-size:15px; flex-shrink:0;}
+  .iconbtn:hover{color:var(--flag); border-color:var(--flag);}
+  .addfeed{font-family:'Barlow Condensed',sans-serif; font-size:12px; color:var(--turf); background:none; border:none; cursor:pointer; padding:2px 0; font-weight:600;}
+  .close-sheet{position:sticky; top:0; float:right; background:none; border:none; color:var(--chalk-dim); font-size:22px; cursor:pointer; line-height:1;}
+  .savebar{position:sticky; bottom:-30px; background:var(--field-2); padding-top:10px; margin-top:6px;}
+
+  footer.note{padding:20px 16px 0; text-align:center;}
+  footer.note p{font-size:12px; color:var(--chalk-dim); font-family:'Barlow Condensed',sans-serif; max-width:480px; margin:0 auto; line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <div class="brand">
+      <h1>THE <span>BEAT</span></h1>
+      <div class="headerbtns">
+        <button class="btn" id="sourcesBtn">⚙ Sources</button>
+        <button class="btn primary" id="refreshBtn">↻ Refresh</button>
+      </div>
+    </div>
+    <div class="tag">Fantasy news wire — DFS, best ball &amp; every NFL city</div>
+    <div class="meta-row"><span id="lastUpdated"></span></div>
+  </header>
+
+  <div class="filterwrap" id="filterwrap"></div>
+
+  <main class="feed" id="feed">
+    <div class="empty">Pick a team, division, or DFS/Best Ball above to pull in the wire.</div>
+  </main>
+
+  <footer class="note">
+    <p>DFS/Best Ball is pinned at top, pulling from RotoBaller, FantasyPros, Razzball, NBC Sports Edge and WalterFootball only — no fan-blog commentary. Team feeds are sourced the same way, per city. Tap ⚙ Sources to swap in any feed you find. Add this page to your home screen for an app-like icon.</p>
+  </footer>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="sheet">
+    <button class="close-sheet" id="closeSheet">×</button>
+    <h2>Feed sources</h2>
+    <p class="sub">Shared with everyone using this app. Swap in your city's actual beat writer if you've got a better feed.</p>
+    <div id="sourceList"></div>
+    <div class="savebar">
+      <button class="btn primary" id="saveSourcesBtn" style="width:100%; justify-content:center;">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function gNews(query){
+  return 'https://news.google.com/rss/search?q=' + encodeURIComponent(query) + '&hl=en-US&gl=US&ceid=US:en';
+}
+
+// ---------- DFS / Best Ball hub: fantasy-dedicated sources only, no SB Nation ----------
+const DFS = {
+  abbr:'DFS', name:'DFS / Best Ball', city:'', color:'#e8b23c',
+  feeds:[
+    'https://football.razzball.com/feed',
+    'https://www.walterfootball.com/rss.xml',
+    gNews('site:rotoballer.com NFL fantasy'),
+    gNews('site:fantasypros.com NFL fantasy'),
+    gNews('site:nbcsportsedge.com NFL fantasy')
+  ]
+};
+
+// ---------- 32-team wire: fantasy/beat coverage per city, SB Nation explicitly excluded ----------
+function teamFeeds(teamQuery){
+  return [ gNews(teamQuery + ' NFL fantasy -site:sbnation.com') ];
+}
+
+const TEAMS = [
+  {abbr:'BUF', name:'Bills', city:'Buffalo', conf:'AFC', div:'East', color:'#00338D', feeds:teamFeeds('Buffalo Bills')},
+  {abbr:'MIA', name:'Dolphins', city:'Miami', conf:'AFC', div:'East', color:'#008E97', feeds:teamFeeds('Miami Dolphins')},
+  {abbr:'NE',  name:'Patriots', city:'New England', conf:'AFC', div:'East', color:'#002244', feeds:teamFeeds('New England Patriots')},
+  {abbr:'NYJ', name:'Jets', city:'New York', conf:'AFC', div:'East', color:'#125740', feeds:teamFeeds('New York Jets')},
+
+  {abbr:'BAL', name:'Ravens', city:'Baltimore', conf:'AFC', div:'North', color:'#241773', feeds:teamFeeds('Baltimore Ravens')},
+  {abbr:'CIN', name:'Bengals', city:'Cincinnati', conf:'AFC', div:'North', color:'#FB4F14', feeds:teamFeeds('Cincinnati Bengals')},
+  {abbr:'CLE', name:'Browns', city:'Cleveland', conf:'AFC', div:'North', color:'#492A1D', feeds:teamFeeds('Cleveland Browns')},
+  {abbr:'PIT', name:'Steelers', city:'Pittsburgh', conf:'AFC', div:'North', color:'#FFB612', feeds:teamFeeds('Pittsburgh Steelers')},
+
+  {abbr:'HOU', name:'Texans', city:'Houston', conf:'AFC', div:'South', color:'#03202F', feeds:teamFeeds('Houston Texans')},
+  {abbr:'IND', name:'Colts', city:'Indianapolis', conf:'AFC', div:'South', color:'#002C5F', feeds:teamFeeds('Indianapolis Colts')},
+  {abbr:'JAX', name:'Jaguars', city:'Jacksonville', conf:'AFC', div:'South', color:'#D7A22A', feeds:teamFeeds('Jacksonville Jaguars')},
+  {abbr:'TEN', name:'Titans', city:'Tennessee', conf:'AFC', div:'South', color:'#4B92DB', feeds:teamFeeds('Tennessee Titans')},
+
+  {abbr:'DEN', name:'Broncos', city:'Denver', conf:'AFC', div:'West', color:'#FB4F14', feeds:teamFeeds('Denver Broncos')},
+  {abbr:'KC',  name:'Chiefs', city:'Kansas City', conf:'AFC', div:'West', color:'#E31837', feeds:teamFeeds('Kansas City Chiefs')},
+  {abbr:'LV',  name:'Raiders', city:'Las Vegas', conf:'AFC', div:'West', color:'#A5ACAF', feeds:teamFeeds('Las Vegas Raiders')},
+  {abbr:'LAC', name:'Chargers', city:'Los Angeles', conf:'AFC', div:'West', color:'#0080C6', feeds:teamFeeds('Los Angeles Chargers')},
+
+  {abbr:'DAL', name:'Cowboys', city:'Dallas', conf:'NFC', div:'East', color:'#041E42', feeds:teamFeeds('Dallas Cowboys')},
+  {abbr:'NYG', name:'Giants', city:'New York', conf:'NFC', div:'East', color:'#0B2265', feeds:teamFeeds('New York Giants')},
+  {abbr:'PHI', name:'Eagles', city:'Philadelphia', conf:'NFC', div:'East', color:'#004C54', feeds:teamFeeds('Philadelphia Eagles')},
+  {abbr:'WSH', name:'Commanders', city:'Washington', conf:'NFC', div:'East', color:'#5A1414', feeds:teamFeeds('Washington Commanders')},
+
+  {abbr:'CHI', name:'Bears', city:'Chicago', conf:'NFC', div:'North', color:'#0B162A', feeds:teamFeeds('Chicago Bears')},
+  {abbr:'DET', name:'Lions', city:'Detroit', conf:'NFC', div:'North', color:'#0076B6', feeds:teamFeeds('Detroit Lions')},
+  {abbr:'GB',  name:'Packers', city:'Green Bay', conf:'NFC', div:'North', color:'#203731', feeds:teamFeeds('Green Bay Packers')},
+  {abbr:'MIN', name:'Vikings', city:'Minnesota', conf:'NFC', div:'North', color:'#4F2683', feeds:teamFeeds('Minnesota Vikings')},
+
+  {abbr:'ATL', name:'Falcons', city:'Atlanta', conf:'NFC', div:'South', color:'#A71930', feeds:teamFeeds('Atlanta Falcons')},
+  {abbr:'CAR', name:'Panthers', city:'Carolina', conf:'NFC', div:'South', color:'#0085CA', feeds:teamFeeds('Carolina Panthers')},
+  {abbr:'NO',  name:'Saints', city:'New Orleans', conf:'NFC', div:'South', color:'#D3BC8D', feeds:teamFeeds('New Orleans Saints')},
+  {abbr:'TB',  name:'Buccaneers', city:'Tampa Bay', conf:'NFC', div:'South', color:'#D50A0A', feeds:teamFeeds('Tampa Bay Buccaneers')},
+
+  {abbr:'ARI', name:'Cardinals', city:'Arizona', conf:'NFC', div:'West', color:'#97233F', feeds:teamFeeds('Arizona Cardinals')},
+  {abbr:'LAR', name:'Rams', city:'Los Angeles', conf:'NFC', div:'West', color:'#003594', feeds:teamFeeds('Los Angeles Rams')},
+  {abbr:'SF',  name:'49ers', city:'San Francisco', conf:'NFC', div:'West', color:'#AA0000', feeds:teamFeeds('San Francisco 49ers')},
+  {abbr:'SEA', name:'Seahawks', city:'Seattle', conf:'NFC', div:'West', color:'#69BE28', feeds:teamFeeds('Seattle Seahawks')},
+];
+
+const ALL_ENTRIES = [DFS, ...TEAMS];
+const CACHE_TTL_MS = 15 * 60 * 1000; // 15 min shared cache
+let feedsByTeam = {};
+let selected = new Set();
+let articleStore = {};
+
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function stripHtml(s){
+  const d = document.createElement('div');
+  d.innerHTML = s || '';
+  return d.textContent || d.innerText || '';
+}
+function timeAgo(dateStr){
+  const d = new Date(dateStr);
+  if(isNaN(d)) return '';
+  const diff = Math.max(0, Date.now() - d.getTime());
+  const m = Math.floor(diff/60000);
+  if(m < 60) return m + 'm ago';
+  const h = Math.floor(m/60);
+  if(h < 24) return h + 'h ago';
+  const days = Math.floor(h/24);
+  return days + 'd ago';
+}
+function teamByAbbr(a){ return ALL_ENTRIES.find(t => t.abbr === a); }
+
+// Google News RSS titles are formatted "Headline - Publisher". Split those apart.
+function splitPublisher(title, fallback){
+  const idx = title.lastIndexOf(' - ');
+  if(idx > 10 && idx > title.length - 40){
+    return { headline: title.slice(0, idx), publisher: title.slice(idx + 3) };
+  }
+  return { headline: title, publisher: fallback };
+}
+
+// ---------- storage-backed feed overrides ----------
+async function loadFeedOverrides(){
+  feedsByTeam = {};
+  ALL_ENTRIES.forEach(t => feedsByTeam[t.abbr] = t.feeds.slice());
+  try{
+    const res = await window.storage.get('feed-overrides', true);
+    if(res && res.value){
+      const overrides = JSON.parse(res.value);
+      Object.keys(overrides).forEach(abbr => {
+        if(Array.isArray(overrides[abbr]) && overrides[abbr].length){
+          feedsByTeam[abbr] = overrides[abbr];
+        }
+      });
+    }
+  }catch(e){}
+}
+async function saveFeedOverrides(overrides){
+  await window.storage.set('feed-overrides', JSON.stringify(overrides), true);
+}
+
+// ---------- fetching ----------
+async function fetchViaRss2Json(url){
+  const api = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(url);
+  const r = await fetch(api);
+  const data = await r.json();
+  if(data.status !== 'ok') throw new Error('rss2json failed');
+  return data.items.map(it => {
+    const split = splitPublisher(stripHtml(it.title), data.feed && data.feed.title || '');
+    return {
+      title: split.headline,
+      publisher: split.publisher,
+      link: it.link,
+      pubDate: it.pubDate,
+      snippet: stripHtml(it.description || it.content || '').slice(0, 400)
+    };
+  });
+}
+async function fetchViaProxy(url){
+  const proxy = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+  const r = await fetch(proxy);
+  const text = await r.text();
+  const xml = new DOMParser().parseFromString(text, 'text/xml');
+  const feedTitle = xml.querySelector('channel > title')?.textContent || '';
+  const items = Array.from(xml.querySelectorAll('item'));
+  return items.map(it => {
+    const rawTitle = stripHtml(it.querySelector('title')?.textContent || '');
+    const split = splitPublisher(rawTitle, feedTitle);
+    return {
+      title: split.headline,
+      publisher: split.publisher,
+      link: it.querySelector('link')?.textContent || '',
+      pubDate: it.querySelector('pubDate')?.textContent || '',
+      snippet: stripHtml(it.querySelector('description')?.textContent || '').slice(0, 400)
+    };
+  });
+}
+async function fetchOneFeed(url){
+  try{ return await fetchViaRss2Json(url); }
+  catch(e){
+    try{ return await fetchViaProxy(url); }
+    catch(e2){ throw new Error('Could not load feed: ' + url); }
+  }
+}
+
+async function getTeamArticles(abbr, forceRefresh){
+  const cacheKey = 'cache:' + abbr;
+  if(!forceRefresh){
+    try{
+      const res = await window.storage.get(cacheKey, true);
+      if(res && res.value){
+        const parsed = JSON.parse(res.value);
+        if(Date.now() - parsed.fetchedAt < CACHE_TTL_MS){
+          return parsed.articles;
+        }
+      }
+    }catch(e){}
+  }
+  const urls = feedsByTeam[abbr] || [];
+  let all = [];
+  let anyError = false;
+  for(const url of urls){
+    try{
+      const items = await fetchOneFeed(url);
+      all = all.concat(items.map(i => Object.assign({}, i, {teamAbbr: abbr})));
+    }catch(e){ anyError = true; }
+  }
+  all.sort((a,b) => new Date(b.pubDate) - new Date(a.pubDate));
+  all = all.slice(0, 20);
+  if(all.length || !anyError){
+    try{
+      await window.storage.set(cacheKey, JSON.stringify({articles: all, fetchedAt: Date.now()}), true);
+    }catch(e){}
+  }
+  return all;
+}
+
+// ---------- rendering: filters ----------
+const DIVISIONS = ['AFC East','AFC North','AFC South','AFC West','NFC East','NFC North','NFC South','NFC West'];
+
+function abbrsForGroup(group){
+  if(group === 'ALL') return TEAMS.map(t => t.abbr);
+  if(group === 'AFC') return TEAMS.filter(t => t.conf === 'AFC').map(t => t.abbr);
+  if(group === 'NFC') return TEAMS.filter(t => t.conf === 'NFC').map(t => t.abbr);
+  const [conf, div] = group.split(' ');
+  return TEAMS.filter(t => t.conf === conf && t.div === div).map(t => t.abbr);
+}
+function groupIsFullyActive(group){
+  return abbrsForGroup(group).every(a => selected.has(a));
+}
+function toggleGroup(group){
+  const abbrs = abbrsForGroup(group);
+  const allOn = groupIsFullyActive(group);
+  abbrs.forEach(a => allOn ? selected.delete(a) : selected.add(a));
+}
+
+function renderFilters(){
+  const wrap = document.getElementById('filterwrap');
+  wrap.innerHTML = '';
+
+  // Pinned DFS chip
+  const pinnedRow = document.createElement('div');
+  pinnedRow.className = 'divgroup';
+  const pinnedLabel = document.createElement('div');
+  pinnedLabel.className = 'divlabel';
+  pinnedLabel.textContent = '★ Pinned';
+  pinnedRow.appendChild(pinnedLabel);
+  const pinnedChips = document.createElement('div');
+  pinnedChips.className = 'chiprow';
+  const dfsActive = selected.has('DFS');
+  const dfsChip = document.createElement('div');
+  dfsChip.className = 'chip' + (dfsActive ? ' active' : '');
+  if(dfsActive) dfsChip.style.background = DFS.color;
+  dfsChip.innerHTML = '<span class="dot" style="background:' + DFS.color + '"></span>DFS / Best Ball';
+  dfsChip.onclick = () => {
+    if(selected.has('DFS')) selected.delete('DFS'); else selected.add('DFS');
+    renderFilters(); loadSelectedFeeds();
+  };
+  pinnedChips.appendChild(dfsChip);
+  pinnedRow.appendChild(pinnedChips);
+  wrap.appendChild(pinnedRow);
+
+  // Quick group filters: All / AFC / NFC / each division
+  const groupRow = document.createElement('div');
+  groupRow.className = 'divgroup';
+  const groupLabel = document.createElement('div');
+  groupLabel.className = 'divlabel';
+  groupLabel.textContent = 'Quick filters';
+  groupRow.appendChild(groupLabel);
+  const groupChips = document.createElement('div');
+  groupChips.className = 'chiprow';
+  ['ALL','AFC','NFC', ...DIVISIONS].forEach(g => {
+    const chip = document.createElement('div');
+    const active = groupIsFullyActive(g === 'ALL' ? 'ALL' : g);
+    chip.className = 'chip group' + (active ? ' active' : '');
+    chip.textContent = g === 'ALL' ? 'All Teams' : g;
+    chip.onclick = () => { toggleGroup(g); renderFilters(); loadSelectedFeeds(); };
+    groupChips.appendChild(chip);
+  });
+  const clearChip = document.createElement('div');
+  clearChip.className = 'chip';
+  clearChip.textContent = 'Clear';
+  clearChip.onclick = () => { selected.clear(); renderFilters(); renderFeed(); };
+  groupChips.appendChild(clearChip);
+  groupRow.appendChild(groupChips);
+  wrap.appendChild(groupRow);
+
+  // Individual team chips grouped by division
+  const groups = {};
+  TEAMS.forEach(t => {
+    const key = t.conf + ' ' + t.div;
+    groups[key] = groups[key] || [];
+    groups[key].push(t);
+  });
+  Object.keys(groups).forEach(key => {
+    const div = document.createElement('div');
+    div.className = 'divgroup';
+    const label = document.createElement('div');
+    label.className = 'divlabel';
+    label.textContent = key;
+    div.appendChild(label);
+    const row = document.createElement('div');
+    row.className = 'chiprow';
+    groups[key].forEach(t => {
+      const chip = document.createElement('div');
+      const active = selected.has(t.abbr);
+      chip.className = 'chip' + (active ? ' active' : '');
+      if(active) chip.style.background = t.color;
+      chip.innerHTML = '<span class="dot" style="background:' + t.color + '"></span>' + t.city + ' ' + t.name;
+      chip.onclick = () => {
+        if(selected.has(t.abbr)) selected.delete(t.abbr); else selected.add(t.abbr);
+        renderFilters();
+        loadSelectedFeeds();
+      };
+      row.appendChild(chip);
+    });
+    div.appendChild(row);
+    wrap.appendChild(div);
+  });
+}
+
+// ---------- rendering: feed ----------
+function renderFeed(){
+  const feed = document.getElementById('feed');
+  if(selected.size === 0){
+    feed.innerHTML = '<div class="empty">Pick a team, division, or DFS/Best Ball above to pull in the wire.</div>';
+    return;
+  }
+  let all = [];
+  selected.forEach(abbr => {
+    (articleStore[abbr] || []).forEach(a => all.push(a));
+  });
+  if(all.length === 0){
+    feed.innerHTML = '<div class="loadmsg"><span class="spin"></span>Loading the wire…</div>';
+    return;
+  }
+  all.sort((a,b) => new Date(b.pubDate) - new Date(a.pubDate));
+  feed.innerHTML = all.map(a => {
+    const team = teamByAbbr(a.teamAbbr);
+    return `<div class="card">
+      <div class="card-top">
+        <span class="badge" style="background:${team.color}">${(team.city + ' ' + team.name).trim()}</span>
+        <span class="publisher">${escapeHtml(a.publisher || '')}</span>
+        <span class="time">${timeAgo(a.pubDate)}</span>
+      </div>
+      <p class="headline">${escapeHtml(a.title)}</p>
+      <p class="snippet">${escapeHtml(a.snippet)}</p>
+      <a class="readstory" href="${escapeHtml(a.link)}" target="_blank" rel="noopener noreferrer">Read Story →</a>
+    </div>`;
+  }).join('');
+}
+
+async function loadSelectedFeeds(){
+  renderFeed();
+  const toLoad = Array.from(selected).filter(abbr => !articleStore[abbr]);
+  if(toLoad.length === 0){ renderFeed(); return; }
+  await Promise.all(toLoad.map(async abbr => {
+    try{
+      articleStore[abbr] = await getTeamArticles(abbr, false);
+    }catch(e){
+      articleStore[abbr] = [];
+    }
+    renderFeed();
+  }));
+  updateLastUpdated();
+}
+
+async function refreshAll(){
+  const btn = document.getElementById('refreshBtn');
+  btn.disabled = true;
+  btn.textContent = '↻ Refreshing…';
+  const targets = Array.from(selected);
+  await Promise.all(targets.map(async abbr => {
+    try{
+      articleStore[abbr] = await getTeamArticles(abbr, true);
+    }catch(e){}
+    renderFeed();
+  }));
+  btn.disabled = false;
+  btn.textContent = '↻ Refresh';
+  updateLastUpdated();
+}
+
+function updateLastUpdated(){
+  document.getElementById('lastUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+}
+
+// ---------- sources modal ----------
+function openSources(){
+  const list = document.getElementById('sourceList');
+  list.innerHTML = '';
+  ALL_ENTRIES.forEach(t => {
+    const row = document.createElement('div');
+    row.className = 'teamrow';
+    row.dataset.abbr = t.abbr;
+    const top = document.createElement('div');
+    top.className = 'teamrow-top';
+    top.innerHTML = `<span class="badge" style="background:${t.color}">${t.abbr}</span><span class="teamrow-name">${(t.city + ' ' + t.name).trim()}</span>`;
+    row.appendChild(top);
+    const urlsWrap = document.createElement('div');
+    urlsWrap.className = 'urlsWrap';
+    (feedsByTeam[t.abbr] || ['']).forEach(url => urlsWrap.appendChild(makeUrlRow(url)));
+    row.appendChild(urlsWrap);
+    const addBtn = document.createElement('button');
+    addBtn.className = 'addfeed';
+    addBtn.textContent = '+ add another feed';
+    addBtn.onclick = () => urlsWrap.appendChild(makeUrlRow(''));
+    row.appendChild(addBtn);
+    list.appendChild(row);
+  });
+  document.getElementById('overlay').classList.add('open');
+}
+function makeUrlRow(value){
+  const r = document.createElement('div');
+  r.className = 'feedurl-row';
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.placeholder = 'https://example.com/rss.xml';
+  input.value = value;
+  const del = document.createElement('button');
+  del.className = 'iconbtn';
+  del.textContent = '×';
+  del.onclick = () => r.remove();
+  r.appendChild(input);
+  r.appendChild(del);
+  return r;
+}
+async function saveSources(){
+  const overrides = {};
+  document.querySelectorAll('.teamrow').forEach(row => {
+    const abbr = row.dataset.abbr;
+    const urls = Array.from(row.querySelectorAll('.feedurl-row input')).map(i => i.value.trim()).filter(Boolean);
+    if(urls.length) overrides[abbr] = urls;
+  });
+  await saveFeedOverrides(overrides);
+  await loadFeedOverrides();
+  articleStore = {};
+  document.getElementById('overlay').classList.remove('open');
+  if(selected.size) loadSelectedFeeds();
+}
+
+document.getElementById('sourcesBtn').onclick = openSources;
+document.getElementById('closeSheet').onclick = () => document.getElementById('overlay').classList.remove('open');
+document.getElementById('overlay').onclick = (e) => { if(e.target.id === 'overlay') e.currentTarget.classList.remove('open'); };
+document.getElementById('saveSourcesBtn').onclick = saveSources;
+document.getElementById('refreshBtn').onclick = refreshAll;
+
+(async function init(){
+  try{
+    await loadFeedOverrides();
+  }catch(e){
+    ALL_ENTRIES.forEach(t => feedsByTeam[t.abbr] = t.feeds.slice());
+  }
+  selected.add('DFS');
+  renderFilters();
+  loadSelectedFeeds();
+})();
+</script>
+</body>
+</html>
